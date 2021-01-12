@@ -32,12 +32,13 @@ namespace NuKeeper.Engine.Packages
             _logger = logger;
         }
 
-        public async Task<int> MakeUpdatePullRequests(
+        public async Task<(int UpdatesMade, bool ThresholdReached)> MakeUpdatePullRequests(
             IGitDriver git,
             RepositoryData repository,
             IReadOnlyCollection<PackageUpdateSet> updates,
             NuGetSources sources,
-            SettingsContainer settings)
+            SettingsContainer settings
+        )
         {
             if (settings == null)
             {
@@ -54,32 +55,45 @@ namespace NuKeeper.Engine.Packages
                 throw new ArgumentNullException(nameof(repository));
             }
 
-            int totalCount = 0;
-            try
+            var openPrs = await _collaborationFactory.CollaborationPlatform.GetNumberOfOpenPullRequests(
+                repository.Pull.Owner,
+                repository.Pull.Name
+            );
+
+            var allowedPrs = settings.UserSettings.MaxOpenPullRequests;
+
+            if (openPrs >= allowedPrs)
             {
-                var groups = UpdateConsolidator.Consolidate(updates,
-                    settings.UserSettings.ConsolidateUpdatesInSinglePullRequest);
+                _logger.Normal("Number of open pull requests equals or exceeds allowed number of open pull requests.");
+                return (0, true);
+            }
 
-                foreach (var updateSets in groups)
+            int totalCount = 0;
+
+            var groups = UpdateConsolidator.Consolidate(updates,
+                settings.UserSettings.ConsolidateUpdatesInSinglePullRequest);
+
+            foreach (var updateSets in groups)
+            {
+                var (updatesMade, pullRequestCreated) = await MakeUpdatePullRequests(
+                    git, repository,
+                    sources, settings, updateSets);
+
+                totalCount += updatesMade;
+
+                if (pullRequestCreated)
+                    openPrs++;
+
+                if (openPrs == allowedPrs)
                 {
-                    var updatesMade = await MakeUpdatePullRequests(
-                        git, repository,
-                        sources, settings, updateSets);
-
-                    totalCount += updatesMade;
+                    return (totalCount, true);
                 }
             }
-#pragma warning disable CA1031
-            catch (Exception ex)
-#pragma warning restore CA1031
-            {
-                _logger.Error("Updates failed", ex);
-            }
 
-            return totalCount;
+            return (totalCount, false);
         }
 
-        private async Task<int> MakeUpdatePullRequests(
+        private async Task<(int UpdatesMade, bool PullRequestCreated)> MakeUpdatePullRequests(
             IGitDriver git, RepositoryData repository,
             NuGetSources sources, SettingsContainer settings,
             IReadOnlyCollection<PackageUpdateSet> updates)
@@ -116,6 +130,9 @@ namespace NuKeeper.Engine.Packages
                 await git.Commit(commitMessage);
             }
 
+            bool pullRequestCreated = false;
+
+            // bug: pr might not have been created yet
             if (haveUpdates)
             {
                 await git.Push(repository.Remote, branchWithChanges);
@@ -140,6 +157,8 @@ namespace NuKeeper.Engine.Packages
                     var pullRequestRequest = new PullRequestRequest(qualifiedBranch, title, repository.DefaultBranch, settings.BranchSettings.DeleteBranchAfterMerge, settings.SourceControlServerSettings.Repository.SetAutoMerge) { Body = body };
 
                     await _collaborationFactory.CollaborationPlatform.OpenPullRequest(repository.Pull, pullRequestRequest, settings.SourceControlServerSettings.Labels);
+
+                    pullRequestCreated = true;
                 }
                 else
                 {
@@ -147,7 +166,7 @@ namespace NuKeeper.Engine.Packages
                 }
             }
             await git.Checkout(repository.DefaultBranch);
-            return filteredUpdates.Count;
+            return (filteredUpdates.Count, pullRequestCreated);
         }
     }
 }

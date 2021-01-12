@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Threading.Tasks;
-
 using NSubstitute;
-
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
@@ -18,8 +12,11 @@ using NuKeeper.Engine;
 using NuKeeper.GitHub;
 using NuKeeper.Inspection.Files;
 using NuKeeper.Inspection.Logging;
-
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Tests.Commands
 {
@@ -31,7 +28,9 @@ namespace NuKeeper.Tests.Commands
         public static async Task<(SettingsContainer settingsContainer, CollaborationPlatformSettings platformSettings)> CaptureSettings(
             FileSettings settingsIn,
             bool addLabels = false,
-            int? maxPackageUpdates = null)
+            int? maxPackageUpdates = null,
+            int? maxOpenPullRequests = null
+        )
         {
             var logger = Substitute.For<IConfigureLogger>();
             var fileSettings = Substitute.For<IFileSettingsCache>();
@@ -56,6 +55,7 @@ namespace NuKeeper.Tests.Commands
             }
 
             command.MaxPackageUpdates = maxPackageUpdates;
+            command.MaxOpenPullRequests = maxOpenPullRequests;
 
             await command.OnExecute();
 
@@ -125,6 +125,19 @@ namespace NuKeeper.Tests.Commands
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.PackageFilters, Is.Not.Null);
             Assert.That(settings.PackageFilters.MaxPackageUpdates, Is.EqualTo(101));
+        }
+
+        [Test]
+        public async Task MaxOpenPullRequestsFromCommandLineOverridesFiles()
+        {
+            var fileSettings = new FileSettings
+            {
+                MaxOpenPullRequests = 10
+            };
+
+            var (settings, _) = await CaptureSettings(fileSettings, false, null, 15);
+
+            Assert.That(settings.UserSettings.MaxOpenPullRequests, Is.EqualTo(15));
         }
 
         [SetUp]
@@ -341,7 +354,7 @@ namespace NuKeeper.Tests.Commands
             collaborationFactorySubstitute.ForkFinder.FindPushFork(Arg.Any<string>(), Arg.Any<ForkData>()).Returns(Task.FromResult(new ForkData(testUri, "nukeeper", "nukeeper")));
             var folderFactorySubstitute = Substitute.For<IFolderFactory>();
             folderFactorySubstitute.FolderFromPath(Arg.Any<string>())
-                .Returns(ci => new Folder(null, new System.IO.DirectoryInfo(ci.Arg<string>())));
+                .Returns(ci => new Folder(Substitute.For<INuKeeperLogger>(), new System.IO.DirectoryInfo(ci.Arg<string>())));
 
             var updater = Substitute.For<IRepositoryUpdater>();
             var gitEngine = new GitRepositoryEngine(updater, collaborationFactorySubstitute, folderFactorySubstitute,
@@ -541,6 +554,47 @@ namespace NuKeeper.Tests.Commands
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.PackageFilters, Is.Not.Null);
             Assert.That(settings.PackageFilters.MaxPackageUpdates, Is.EqualTo(42));
+        }
+
+        [Test]
+        public async Task WillReadMaxOpenPullRequestsFromFile()
+        {
+            var fileSettings = new FileSettings
+            {
+                MaxOpenPullRequests = 202
+            };
+
+            var (settings, _) = await CaptureSettings(fileSettings);
+
+            Assert.That(settings.UserSettings.MaxOpenPullRequests, Is.EqualTo(202));
+        }
+
+        [Test]
+        public async Task MaxOpenPullRequestsIsOneIfConsolidatedIsTrue()
+        {
+            var fileSettings = new FileSettings
+            {
+                Consolidate = true,
+                MaxPackageUpdates = 20
+            };
+
+            var (settings, _) = await CaptureSettings(fileSettings);
+
+            Assert.That(settings.UserSettings.MaxOpenPullRequests, Is.EqualTo(1));
+        }
+
+        [Test]
+        public async Task MaxOpenPullRequestsIsMaxPackageUpdatesIfConsolidatedIsFalse()
+        {
+            var fileSettings = new FileSettings
+            {
+                Consolidate = false,
+                MaxPackageUpdates = 20
+            };
+
+            var (settings, _) = await CaptureSettings(fileSettings);
+
+            Assert.That(settings.UserSettings.MaxOpenPullRequests, Is.EqualTo(20));
         }
 
         private static ICollaborationFactory GetCollaborationFactory(IEnvironmentVariablesProvider environmentVariablesProvider,

@@ -11,20 +11,20 @@
     <title>Configuration :: NuKeeper</title>
 
     
-    <link href="/css/nucleus.css?1606073735" rel="stylesheet">
-    <link href="/css/fontawesome-all.min.css?1606073735" rel="stylesheet">
-    <link href="/css/hybrid.css?1606073735" rel="stylesheet">
-    <link href="/css/featherlight.min.css?1606073735" rel="stylesheet">
-    <link href="/css/perfect-scrollbar.min.css?1606073735" rel="stylesheet">
-    <link href="/css/auto-complete.css?1606073735" rel="stylesheet">
-    <link href="/css/atom-one-dark-reasonable.css?1606073735" rel="stylesheet">
-    <link href="/css/theme.css?1606073735" rel="stylesheet">
-    <link href="/css/hugo-theme.css?1606073735" rel="stylesheet">
+    <link href="/css/nucleus.css?1610446308" rel="stylesheet">
+    <link href="/css/fontawesome-all.min.css?1610446308" rel="stylesheet">
+    <link href="/css/hybrid.css?1610446308" rel="stylesheet">
+    <link href="/css/featherlight.min.css?1610446308" rel="stylesheet">
+    <link href="/css/perfect-scrollbar.min.css?1610446308" rel="stylesheet">
+    <link href="/css/auto-complete.css?1610446308" rel="stylesheet">
+    <link href="/css/atom-one-dark-reasonable.css?1610446308" rel="stylesheet">
+    <link href="/css/theme.css?1610446308" rel="stylesheet">
+    <link href="/css/hugo-theme.css?1610446308" rel="stylesheet">
     
-      <link href="/css/theme-nukeeper.css?1606073735" rel="stylesheet">
+      <link href="/css/theme-nukeeper.css?1610446308" rel="stylesheet">
     
 
-    <script src="/js/jquery-3.3.1.min.js?1606073735"></script>
+    <script src="/js/jquery-3.3.1.min.js?1610446308"></script>
 
     <style type="text/css">
       :root #header + #content > #left > #rlblock_left{
@@ -53,14 +53,14 @@
     <span data-search-clear=""><i class="fas fa-times"></i></span>
 </div>
 
-<script type="text/javascript" src="/js/lunr.min.js?1606073735"></script>
-<script type="text/javascript" src="/js/auto-complete.js?1606073735"></script>
+<script type="text/javascript" src="/js/lunr.min.js?1610446308"></script>
+<script type="text/javascript" src="/js/auto-complete.js?1610446308"></script>
 <script type="text/javascript">
     
         var baseurl = "\/";
     
 </script>
-<script type="text/javascript" src="/js/search.js?1606073735"></script>
+<script type="text/javascript" src="/js/search.js?1610446308"></script>
 
     
   </div>
@@ -716,6 +716,13 @@
 </tr>
 
 <tr>
+<td>maxopenpullrequests</td>
+<td></td>
+<td><code>repo</code>, <code>org</code>, <code>global</code></td>
+<td>1 if <code>consolidate</code>, else <code>maxpackageupdates</code></td>
+</tr>
+
+<tr>
 <td>consolidate</td>
 <td>n</td>
 <td><code>repo</code>, <code>org</code>, <code>global</code></td>
@@ -839,11 +846,21 @@ The default value <code>Major</code> will allow updates to the overall latest ve
 
 <li><p><em>maxpackageupdates</em> The maximum number of package updates to apply. In <code>repo</code>,<code>org</code> and <code>global</code> commands, this limits the number of updates per repository. If the <code>--consolidate</code> flag is used, these wll be consolidated into one Pull Request. If not, then there will be one Pull Request per update applied. In the <code>update</code> command, The default value is 1. When changed, multiple updates can be applied in a single <code>update</code> run, up to this number.</p></li>
 
-<li><p><em>maxrepo</em> The maximum number of repositories to change. Used in Organisation and Global mode.</p></li>
+<li><p><em>maxopenpullrequests</em> The maximum number of pull requests that can be active in one repository at a time. If the <code>--consolidate</code> flag is used, the default value is 1. If not, then the default will be <code>maxpackageupdates</code>. This currently only works for AzureDevops/TFS.</p></li>
+</ul>
 
-<li><p><em>consolidate</em> Consolidate updates into a single pull request, instead of the default of 1 pull request per package update applied.</p></li>
+<p>To be able to figure out the number of active pull requests, different strategies are used:</p>
 
-<li><p><em>platform</em> One of <code>GitHub</code>, <code>AzureDevOps</code>, <code>Bitbucket</code>, <code>BitbucketLocal</code>, <code>Gitlab</code>, <code>Gitea</code>. Determines which kind of source control api will be used. This is typicaly infered from the api url structure, but since this does not always work, it can be specified here if neccessary.</p></li>
+<ol>
+<li>First, only pull requests created by the identity linked to the PAT are considered, however this is only possible for Azure Devops Services, and not the on-premise version, as it does not provide any (straightforward) API to be able to figure this out. The cloud version does provide an API that should allow us to figure out the current account, but this requires a token with a scope that can read identities/account information.</li>
+<li>If no account or identity can be determined based on the PAT. Then, currently a hardcoded, user <code>nukeeper@bot.com</code> is considered. Again this requires a broader scope.</li>
+<li>If no user identity was able to be fetched, then it will fetch all active PRs and consider only those with labels <code>nukeeper</code> attached to it.</li>
+</ol>
+
+<ul>
+<li><em>maxrepo</em> The maximum number of repositories to change. Used in Organisation and Global mode.</li>
+<li><em>consolidate</em> Consolidate updates into a single pull request, instead of the default of 1 pull request per package update applied.</li>
+<li><em>platform</em> One of <code>GitHub</code>, <code>AzureDevOps</code>, <code>Bitbucket</code>, <code>BitbucketLocal</code>, <code>Gitlab</code>, <code>Gitea</code>. Determines which kind of source control api will be used. This is typicaly infered from the api url structure, but since this does not always work, it can be specified here if neccessary.</li>
 
 <li><p><em>gitclipath</em> Path to <code>git</code> command line. Alternative use native git via cli instead of the default lib2gitsharp implementation. In special cases lib2gitsharp is not enough. E.g. in enviroments with company-proxies or self hosted git services signed certificates. For Windows it is typically <code>C:\Program Files\Git\bin\git.exe</code>. For Linux it is typically <code>/usr/bin/git</code>.</p></li>
 
@@ -1204,20 +1221,20 @@ It accepts the following tokens:</p></li>
     <div style="left: -1000px; overflow: scroll; position: absolute; top: -1000px; border: none; box-sizing: content-box; height: 200px; margin: 0px; padding: 0px; width: 200px;">
       <div style="border: none; box-sizing: content-box; height: 200px; margin: 0px; padding: 0px; width: 200px;"></div>
     </div>
-    <script src="/js/clipboard.min.js?1606073735"></script>
-    <script src="/js/perfect-scrollbar.min.js?1606073735"></script>
-    <script src="/js/perfect-scrollbar.jquery.min.js?1606073735"></script>
-    <script src="/js/jquery.sticky.js?1606073735"></script>
-    <script src="/js/featherlight.min.js?1606073735"></script>
-    <script src="/js/html5shiv-printshiv.min.js?1606073735"></script>
-    <script src="/js/highlight.pack.js?1606073735"></script>
+    <script src="/js/clipboard.min.js?1610446308"></script>
+    <script src="/js/perfect-scrollbar.min.js?1610446308"></script>
+    <script src="/js/perfect-scrollbar.jquery.min.js?1610446308"></script>
+    <script src="/js/jquery.sticky.js?1610446308"></script>
+    <script src="/js/featherlight.min.js?1610446308"></script>
+    <script src="/js/html5shiv-printshiv.min.js?1610446308"></script>
+    <script src="/js/highlight.pack.js?1610446308"></script>
     <script>hljs.initHighlightingOnLoad();</script>
-    <script src="/js/modernizr.custom-3.6.0.js?1606073735"></script>
-    <script src="/js/learn.js?1606073735"></script>
-    <script src="/js/hugo-learn.js?1606073735"></script>
+    <script src="/js/modernizr.custom-3.6.0.js?1610446308"></script>
+    <script src="/js/learn.js?1610446308"></script>
+    <script src="/js/hugo-learn.js?1610446308"></script>
 
-    <link href="/mermaid/mermaid.css?1606073735" type="text/css" rel="stylesheet" />
-    <script src="/mermaid/mermaid.js?1606073735"></script>
+    <link href="/mermaid/mermaid.css?1610446308" type="text/css" rel="stylesheet" />
+    <script src="/mermaid/mermaid.js?1610446308"></script>
     <script>
         mermaid.initialize({ startOnLoad: true });
     </script>
