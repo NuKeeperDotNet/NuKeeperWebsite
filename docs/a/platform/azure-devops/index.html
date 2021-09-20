@@ -11,20 +11,20 @@
     <title>Azure Devops :: NuKeeper</title>
 
     
-    <link href="/css/nucleus.css?1632150162" rel="stylesheet">
-    <link href="/css/fontawesome-all.min.css?1632150162" rel="stylesheet">
-    <link href="/css/hybrid.css?1632150162" rel="stylesheet">
-    <link href="/css/featherlight.min.css?1632150162" rel="stylesheet">
-    <link href="/css/perfect-scrollbar.min.css?1632150162" rel="stylesheet">
-    <link href="/css/auto-complete.css?1632150162" rel="stylesheet">
-    <link href="/css/atom-one-dark-reasonable.css?1632150162" rel="stylesheet">
-    <link href="/css/theme.css?1632150162" rel="stylesheet">
-    <link href="/css/hugo-theme.css?1632150162" rel="stylesheet">
+    <link href="/css/nucleus.css?1632154980" rel="stylesheet">
+    <link href="/css/fontawesome-all.min.css?1632154980" rel="stylesheet">
+    <link href="/css/hybrid.css?1632154980" rel="stylesheet">
+    <link href="/css/featherlight.min.css?1632154980" rel="stylesheet">
+    <link href="/css/perfect-scrollbar.min.css?1632154980" rel="stylesheet">
+    <link href="/css/auto-complete.css?1632154980" rel="stylesheet">
+    <link href="/css/atom-one-dark-reasonable.css?1632154980" rel="stylesheet">
+    <link href="/css/theme.css?1632154980" rel="stylesheet">
+    <link href="/css/hugo-theme.css?1632154980" rel="stylesheet">
     
-      <link href="/css/theme-nukeeper.css?1632150162" rel="stylesheet">
+      <link href="/css/theme-nukeeper.css?1632154980" rel="stylesheet">
     
 
-    <script src="/js/jquery-3.3.1.min.js?1632150162"></script>
+    <script src="/js/jquery-3.3.1.min.js?1632154980"></script>
 
     <style type="text/css">
       :root #header + #content > #left > #rlblock_left{
@@ -53,14 +53,14 @@
     <span data-search-clear=""><i class="fas fa-times"></i></span>
 </div>
 
-<script type="text/javascript" src="/js/lunr.min.js?1632150162"></script>
-<script type="text/javascript" src="/js/auto-complete.js?1632150162"></script>
+<script type="text/javascript" src="/js/lunr.min.js?1632154980"></script>
+<script type="text/javascript" src="/js/auto-complete.js?1632154980"></script>
 <script type="text/javascript">
     
         var baseurl = "\/";
     
 </script>
-<script type="text/javascript" src="/js/search.js?1632150162"></script>
+<script type="text/javascript" src="/js/search.js?1632154980"></script>
 
     
   </div>
@@ -601,24 +601,18 @@
 
 <ol>
 <li>Add a new build pipeline and select yaml.</li>
-
-<li><p>Add the following <strong>yaml</strong> file and adjust where necessary:
+<li>Add the following <strong>yaml</strong> file and adjust where necessary:
 ```yml
-trigger: none # don&rsquo;t run as CI build</p>
+trigger: none # don&rsquo;t run as CI build</li>
+</ol>
 
-<p>schedules:</p>
-
-<ul>
-<li>cron: &ldquo;0 0 * * *&rdquo; # run daily at UTC midnight
-displayName: Check for updated dependencies
-branches:
-include:
-
-<ul>
-<li>master
-always: true # regardless of changes</li>
-</ul></li>
-</ul>
+<p>schedules:
+- cron: &ldquo;0 0 * * *&rdquo; # run daily at UTC midnight
+  displayName: Check for updated dependencies
+  branches:
+    include:
+    - master
+  always: true # regardless of changes</p>
 
 <p>resources:
    - repo: self # point to its own repo, change it if you don&rsquo;t want that</p>
@@ -628,22 +622,19 @@ always: true # regardless of changes</li>
 
 <p>steps:
   - task: nukeeper.nukeeper.nukeeper.NuKeeper@0
-    displayName: NuKeeper
-```</p></li>
+    displayName: NuKeeper</p>
 
-<li><p>Optionally add extra arguments, The extension just calls the <strong>repo</strong> command, so any arguments extra for your repo command can be added here.
+<pre><code>1. Optionally add extra arguments, The extension just calls the **repo** command, so any arguments extra for your repo command can be added here.
 ```yml
-steps:</p>
-
-<ul>
-<li>task: nukeeper.nukeeper.nukeeper.NuKeeper@0
+steps:
+- task: nukeeper.nukeeper.nukeeper.NuKeeper@0
 displayName: NuKeeper
 inputs:
-arguments: &lsquo;-m 3 -v d&rsquo;
-```</li>
-</ul></li>
+    arguments: '-m 3 -v d'
+</code></pre>
 
-<li><p>Finally give the <strong>build service user</strong> the required <em><a href="#permissions">Permissions</a></em> and take it for a spin by qeueing a new build!</p></li>
+<ol>
+<li>Finally give the <strong>build service user</strong> the required <em><a href="#permissions">Permissions</a></em> and take it for a spin by qeueing a new build!</li>
 </ol>
 
 <h4 id="editor-mode">Editor mode</h4>
@@ -1044,20 +1035,20 @@ arguments: &lsquo;-m 3 -v d&rsquo;
     <div style="left: -1000px; overflow: scroll; position: absolute; top: -1000px; border: none; box-sizing: content-box; height: 200px; margin: 0px; padding: 0px; width: 200px;">
       <div style="border: none; box-sizing: content-box; height: 200px; margin: 0px; padding: 0px; width: 200px;"></div>
     </div>
-    <script src="/js/clipboard.min.js?1632150162"></script>
-    <script src="/js/perfect-scrollbar.min.js?1632150162"></script>
-    <script src="/js/perfect-scrollbar.jquery.min.js?1632150162"></script>
-    <script src="/js/jquery.sticky.js?1632150162"></script>
-    <script src="/js/featherlight.min.js?1632150162"></script>
-    <script src="/js/html5shiv-printshiv.min.js?1632150162"></script>
-    <script src="/js/highlight.pack.js?1632150162"></script>
+    <script src="/js/clipboard.min.js?1632154980"></script>
+    <script src="/js/perfect-scrollbar.min.js?1632154980"></script>
+    <script src="/js/perfect-scrollbar.jquery.min.js?1632154980"></script>
+    <script src="/js/jquery.sticky.js?1632154980"></script>
+    <script src="/js/featherlight.min.js?1632154980"></script>
+    <script src="/js/html5shiv-printshiv.min.js?1632154980"></script>
+    <script src="/js/highlight.pack.js?1632154980"></script>
     <script>hljs.initHighlightingOnLoad();</script>
-    <script src="/js/modernizr.custom-3.6.0.js?1632150162"></script>
-    <script src="/js/learn.js?1632150162"></script>
-    <script src="/js/hugo-learn.js?1632150162"></script>
+    <script src="/js/modernizr.custom-3.6.0.js?1632154980"></script>
+    <script src="/js/learn.js?1632154980"></script>
+    <script src="/js/hugo-learn.js?1632154980"></script>
 
-    <link href="/mermaid/mermaid.css?1632150162" type="text/css" rel="stylesheet" />
-    <script src="/mermaid/mermaid.js?1632150162"></script>
+    <link href="/mermaid/mermaid.css?1632154980" type="text/css" rel="stylesheet" />
+    <script src="/mermaid/mermaid.js?1632154980"></script>
     <script>
         mermaid.initialize({ startOnLoad: true });
     </script>
